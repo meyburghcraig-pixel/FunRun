@@ -173,10 +173,15 @@
         <input type="email" id="f-email" placeholder="e.g. thabo@mail.com" autocomplete="email">
         <span class="field-error" id="e-email"></span>
       </div>
-      <div class="field full">
+      <div class="field">
         <label>SA ID Number</label>
-        <input type="text" id="f-id" placeholder="13-digit ID number" maxlength="13">
+        <input type="text" id="f-id" placeholder="13-digit ID number" maxlength="13" oninput="calcAgeFromID(this.value)">
         <span class="field-error" id="e-id"></span>
+      </div>
+      <div class="field">
+        <label>Age (from ID)</label>
+        <input type="text" id="f-age" placeholder="Auto-calculated" readonly style="background:var(--mid);color:var(--lime);cursor:default;">
+        <span class="field-error" id="e-age"></span>
       </div>
     </div>
     <button class="submit-btn" id="submit-btn" onclick="handleRegister()">REGISTER FOR THE RUN →</button>
@@ -340,7 +345,8 @@ async function handleRegister() {
     btn.innerHTML = '<span class="spinner"></span>REGISTERING…';
 
     const raceId = generateRaceId();
-    const entry = { raceId, name, surname, cell, email, idNum, registeredAt: new Date().toISOString(), completed: false };
+    const age = document.getElementById('f-age').value.trim();
+    const entry = { raceId, name, surname, cell, email, idNum, age, registeredAt: new Date().toISOString(), completed: false };
     const result = await sheetPost(entry);
     if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
 
@@ -356,6 +362,7 @@ async function handleRegister() {
     });
     document.getElementById('success-modal').classList.add('show');
     ['name','surname','cell','email','id'].forEach(f => document.getElementById('f-'+f).value = '');
+    document.getElementById('f-age').value = '';
 
   } catch(err) {
     showToast('⚠️ Could not save registration. Please try again.', true);
@@ -551,6 +558,31 @@ async function markComplete(raceId) {
   } catch(e) {
     showToast('⚠️ Could not update completion status.', true);
   }
+}
+
+// ── Age calculator from SA ID ──────────────────────────────────
+function calcAgeFromID(val) {
+  const ageField = document.getElementById('f-age');
+  if (!val || val.length < 6) { ageField.value = ''; return; }
+  const yearPart  = parseInt(val.substring(0, 2), 10);
+  const monthPart = parseInt(val.substring(2, 4), 10);
+  const dayPart   = parseInt(val.substring(4, 6), 10);
+  if (isNaN(yearPart) || isNaN(monthPart) || isNaN(dayPart) || monthPart < 1 || monthPart > 12 || dayPart < 1 || dayPart > 31) {
+    ageField.value = '';
+    return;
+  }
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  // SA IDs: year 00-26 → 2000s, 27-99 → 1900s (fixed cutoff)
+  const fullYear = yearPart <= 26 ? 2000 + yearPart : 1900 + yearPart;
+  const birthDate = new Date(fullYear, monthPart - 1, dayPart);
+  if (isNaN(birthDate.getTime())) { ageField.value = ''; return; }
+  // Calculate age — floor to last birthday (never round up)
+  let age = currentYear - fullYear;
+  const hadBirthdayThisYear = (today.getMonth() > birthDate.getMonth()) ||
+    (today.getMonth() === birthDate.getMonth() && today.getDate() >= dayPart);
+  if (!hadBirthdayThisYear) age--;
+  ageField.value = age >= 0 && age < 130 ? age + ' years' : '';
 }
 
 document.getElementById('success-modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
