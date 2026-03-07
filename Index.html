@@ -48,6 +48,18 @@
   input.error { border-color: var(--error); }
   .field-error { font-size: 12px; color: var(--error); min-height: 16px; }
 
+  select { background: var(--card); border: 1.5px solid var(--border); border-radius: 6px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; padding: 14px 16px; outline: none; transition: border-color 0.2s, box-shadow 0.2s; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 16px center; cursor: pointer; }
+  select:focus { border-color: var(--lime); box-shadow: 0 0 0 3px rgba(200,241,53,0.1); }
+  select.error { border-color: var(--error); }
+  select option { background: var(--card); color: var(--text); }
+
+  .section-divider { grid-column: 1 / -1; border: none; border-top: 1px solid var(--border); margin: 6px 0; }
+  .section-label { grid-column: 1 / -1; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--lime); font-weight: 600; margin-bottom: -6px; }
+
+  .popi-box { margin-top: 28px; background: var(--card); border: 1.5px solid var(--border); border-radius: 8px; padding: 20px 22px; }
+  .popi-box h4 { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--lime); font-weight: 600; margin-bottom: 10px; }
+  .popi-box p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
   .submit-btn { margin-top: 30px; width: 100%; background: var(--lime); color: var(--dark); border: none; border-radius: 6px; font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; padding: 18px; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
   .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(200,241,53,0.3); }
   .submit-btn:active { transform: translateY(0); }
@@ -183,7 +195,54 @@
         <input type="text" id="f-age" placeholder="Auto-calculated" readonly style="background:var(--mid);color:var(--lime);cursor:default;">
         <span class="field-error" id="e-age"></span>
       </div>
+
+      <!-- Gender -->
+      <div class="field">
+        <label>Gender</label>
+        <select id="f-gender">
+          <option value="" disabled selected>Select gender</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+        <span class="field-error" id="e-gender"></span>
+      </div>
+
+      <hr class="section-divider">
+      <div class="section-label">Emergency Contact</div>
+
+      <div class="field">
+        <label>Emergency Contact Name</label>
+        <input type="text" id="f-emerg-name" placeholder="e.g. Jane Nkosi">
+        <span class="field-error" id="e-emerg-name"></span>
+      </div>
+      <div class="field">
+        <label>Emergency Contact Cellphone</label>
+        <input type="tel" id="f-emerg-cell" placeholder="e.g. 0821234567">
+        <span class="field-error" id="e-emerg-cell"></span>
+      </div>
+
+      <hr class="section-divider">
+      <div class="section-label">Medical Aid</div>
+
+      <div class="field">
+        <label>Medical Aid Name</label>
+        <input type="text" id="f-medical-name" placeholder="e.g. Discovery Health">
+        <span class="field-error" id="e-medical-name"></span>
+      </div>
+      <div class="field">
+        <label>Medical Aid Number</label>
+        <input type="text" id="f-medical-num" placeholder="e.g. 123456789">
+        <span class="field-error" id="e-medical-num"></span>
+      </div>
+
     </div>
+
+    <!-- POPI Act Disclaimer -->
+    <div class="popi-box">
+      <h4>🔒 POPI Act Disclaimer</h4>
+      <p>By registering for the NG Helderberg Fun Run / Fun Walk 2026, you consent to the collection and processing of your personal information in accordance with the <strong style="color:var(--text);">Protection of Personal Information Act (POPIA), Act 4 of 2013</strong>. Your information will be used solely for event administration, participant safety, and communication purposes. It will not be shared with any third parties without your consent. You have the right to access, correct, or request deletion of your personal information at any time by contacting the event organiser.</p>
+    </div>
+
     <button class="submit-btn" id="submit-btn" onclick="handleRegister()">REGISTER FOR THE RUN →</button>
   </div>
 </div>
@@ -306,9 +365,11 @@ function switchTab(tab, btn) {
 }
 
 function clearErrors() {
-  ['name','surname','cell','email','id'].forEach(f => {
-    document.getElementById('f-'+f).classList.remove('error');
-    document.getElementById('e-'+f).textContent = '';
+  ['name','surname','cell','email','id','gender','emerg-name','emerg-cell','medical-name','medical-num'].forEach(f => {
+    const el = document.getElementById('f-'+f);
+    if (el) el.classList.remove('error');
+    const err = document.getElementById('e-'+f);
+    if (err) err.textContent = '';
   });
 }
 function setError(field, msg) {
@@ -318,11 +379,16 @@ function setError(field, msg) {
 
 async function handleRegister() {
   clearErrors();
-  const name    = document.getElementById('f-name').value.trim();
-  const surname = document.getElementById('f-surname').value.trim();
-  const cell    = document.getElementById('f-cell').value.trim();
-  const email   = document.getElementById('f-email').value.trim();
-  const idNum   = document.getElementById('f-id').value.trim();
+  const name      = document.getElementById('f-name').value.trim();
+  const surname   = document.getElementById('f-surname').value.trim();
+  const cell      = document.getElementById('f-cell').value.trim();
+  const email     = document.getElementById('f-email').value.trim();
+  const idNum     = document.getElementById('f-id').value.trim();
+  const gender    = document.getElementById('f-gender').value;
+  const emergName = document.getElementById('f-emerg-name').value.trim();
+  const emergCell = document.getElementById('f-emerg-cell').value.trim();
+  const medName   = document.getElementById('f-medical-name').value.trim();
+  const medNum    = document.getElementById('f-medical-num').value.trim();
   let valid = true;
 
   if (!name)    { setError('name', 'First name is required'); valid = false; }
@@ -330,6 +396,9 @@ async function handleRegister() {
   if (!/^0[6-8][0-9]{8}$/.test(cell))            { setError('cell', 'Enter a valid SA mobile number'); valid = false; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { setError('email', 'Enter a valid email address'); valid = false; }
   if (!/^\d{13}$/.test(idNum))                    { setError('id', 'ID must be exactly 13 digits'); valid = false; }
+  if (!gender)                                     { setError('gender', 'Please select a gender'); valid = false; }
+  if (!emergName)                                  { setError('emerg-name', 'Emergency contact name is required'); valid = false; }
+  if (!/^0[6-8][0-9]{8}$/.test(emergCell))        { setError('emerg-cell', 'Enter a valid SA mobile number'); valid = false; }
   if (!valid) return;
 
   const btn = document.getElementById('submit-btn');
@@ -346,7 +415,11 @@ async function handleRegister() {
 
     const raceId = generateRaceId();
     const age = document.getElementById('f-age').value.trim();
-    const entry = { raceId, name, surname, cell, email, idNum, age, registeredAt: new Date().toISOString(), completed: false };
+    const entry = {
+      raceId, name, surname, cell, email, idNum, age, gender,
+      emergName, emergCell, medName, medNum,
+      registeredAt: new Date().toISOString(), completed: false
+    };
     const result = await sheetPost(entry);
     if (result.status !== 'success') throw new Error(result.message || 'Unknown error');
 
@@ -363,6 +436,11 @@ async function handleRegister() {
     document.getElementById('success-modal').classList.add('show');
     ['name','surname','cell','email','id'].forEach(f => document.getElementById('f-'+f).value = '');
     document.getElementById('f-age').value = '';
+    document.getElementById('f-gender').value = '';
+    document.getElementById('f-emerg-name').value = '';
+    document.getElementById('f-emerg-cell').value = '';
+    document.getElementById('f-medical-name').value = '';
+    document.getElementById('f-medical-num').value = '';
 
   } catch(err) {
     showToast('⚠️ Could not save registration. Please try again.', true);
@@ -573,15 +651,13 @@ function calcAgeFromID(val) {
   }
   const today = new Date();
   const currentYear = today.getFullYear();
-  // SA IDs: year 00-26 → 2000s, 27-99 → 1900s (fixed cutoff)
-  const fullYear = yearPart <= 26 ? 2000 + yearPart : 1900 + yearPart;
+  // SA IDs: year 00-24 → 2000s, 25-99 → 1900s (adjust cutoff as needed)
+  const fullYear = yearPart <= (currentYear % 100) ? 2000 + yearPart : 1900 + yearPart;
   const birthDate = new Date(fullYear, monthPart - 1, dayPart);
   if (isNaN(birthDate.getTime())) { ageField.value = ''; return; }
-  // Calculate age — floor to last birthday (never round up)
   let age = currentYear - fullYear;
-  const hadBirthdayThisYear = (today.getMonth() > birthDate.getMonth()) ||
-    (today.getMonth() === birthDate.getMonth() && today.getDate() >= dayPart);
-  if (!hadBirthdayThisYear) age--;
+  const monthDiff = today.getMonth() - birthDate.getMonth();
+  if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < dayPart)) age--;
   ageField.value = age >= 0 && age < 130 ? age + ' years' : '';
 }
 
